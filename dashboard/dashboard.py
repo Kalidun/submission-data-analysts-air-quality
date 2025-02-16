@@ -17,43 +17,49 @@ def get_data_count(df):
 
 
 def create_yearly_polution_df(df):
-    yearly_polution_df = df.groupby(by="Year").agg({
-        "PM2.5": "mean",
-        "PM10": "mean",
-        "NO2": "mean",
-        "CO": "mean",
-        "SO2": "mean",
-        "O3": "mean"
-    })
+    yearly_polution_df = df.groupby(by="Year").agg(
+        {
+            "PM2.5": "mean",
+            "PM10": "mean",
+            "NO2": "mean",
+            "CO": "mean",
+            "SO2": "mean",
+            "O3": "mean",
+        }
+    )
     return yearly_polution_df
 
 def create_daily_polution_df(df):
-    daily_polution_df = df.groupby(by="Date").agg({
-        "PM2.5": "mean",
-        "PM10": "mean",
-        "NO2": "mean",
-        "CO": "mean",
-        "SO2": "mean",
-        "O3": "mean"
-    })
+    daily_polution_df = df.groupby(by="Date").agg(
+        {
+            "PM2.5": "mean",
+            "PM10": "mean",
+            "NO2": "mean",
+            "CO": "mean",
+            "SO2": "mean",
+            "O3": "mean",
+        }
+    )
     return daily_polution_df
 
 def create_daily_weather_df(df):
-    daily_weather_df = df.groupby(by="Date").agg({
-        "TEMP": "mean",
-        "PRES": "mean",
-        "DEWP": "mean",
-        "RAIN": "mean",
-        "Wind_Speed": "mean"
-    })
+    daily_weather_df = df.groupby(by="Date").agg(
+        {
+            "TEMP": "mean",
+            "PRES": "mean",
+            "DEWP": "mean",
+            "RAIN": "mean",
+            "Wind_Speed": "mean",
+        }
+    )
     return daily_weather_df
 
-def create_hourly_data_df(df):
-    last_day = pd.to_datetime(df["Date"]).dt
 
-    last_day_df = df[df["Year"] == last_day.year.max()][df["Month"] == last_day.month.max()][df["Day"] == last_day.day.max()]
+def create_hourly_data_df(requested_data, df):
+    return df[df["Year"] == requested_data.year][df["Month"] == requested_data.month][
+        df["Day"] == requested_data.day
+    ]
 
-    return last_day_df
 
 df = pd.read_csv("dashboard/cleaned_data.csv")
 
@@ -69,9 +75,10 @@ with st.sidebar:
     st.subheader("Filter Data")
 
     start_date, end_date = st.date_input(
-        label='Rentang Waktu',
+        label="Rentang Waktu",
         min_value=min_date.date(),
-        value=[min_date.date(), max_date.date()]
+        max_value=max_date.date(),
+        value=[min_date.date(), max_date.date()],
     )
 
     start_date = pd.to_datetime(start_date).replace(hour=23)
@@ -105,16 +112,28 @@ with st.container():
 
     with col2:
         st.write(f"Selesai: {end_date}")
-        
-        
+
+
 plt.figure(figsize=(10, 5))
 yearly_polution_df = create_yearly_polution_df(df)
 
-plt.plot(yearly_polution_df.index, yearly_polution_df["PM2.5"], marker='o', label='PM2.5', color='blue')
-plt.plot(yearly_polution_df.index, yearly_polution_df["PM10"], marker='s', label='PM10', color='red')
+plt.plot(
+    yearly_polution_df.index,
+    yearly_polution_df["PM2.5"],
+    marker="o",
+    label="PM2.5",
+    color="blue",
+)
+plt.plot(
+    yearly_polution_df.index,
+    yearly_polution_df["PM10"],
+    marker="s",
+    label="PM10",
+    color="red",
+)
 plt.xlabel("Tahun")
-plt.ylabel("Rata-rata Polusi")
-plt.title("Rata-rata Polusi per Tahun")
+plt.ylabel("Rata-rata Polusi (µg/m³)")
+plt.title("Tren Rata-rata Polusi per Tahun")
 plt.legend()
 st.pyplot(plt)
 
@@ -122,11 +141,23 @@ st.subheader("Rata-rata Polusi per Hari")
 plt.figure(figsize=(10, 5))
 daily_polution_df = create_daily_polution_df(filtered_df)
 
-plt.plot(daily_polution_df.index, daily_polution_df["PM2.5"], marker='o', label='Polusi PM2.5', color='blue')
-plt.plot(daily_polution_df.index, daily_polution_df["PM10"], marker='s', label='Polusi PM10', color='red')
+plt.plot(
+    daily_polution_df.index,
+    daily_polution_df["PM2.5"],
+    marker="o",
+    label="Polusi PM2.5",
+    color="blue",
+)
+plt.plot(
+    daily_polution_df.index,
+    daily_polution_df["PM10"],
+    marker="s",
+    label="Polusi PM10",
+    color="red",
+)
 plt.xlabel("Tanggal")
-plt.ylabel("Rata-rata Polusi")
-plt.title("Rata-rata Polusi per Hari")
+plt.ylabel("Rata-rata Polusi (µg/m³)")
+plt.title("Tren Rata-rata Polusi per Hari")
 plt.legend()
 st.pyplot(plt)
 
@@ -134,8 +165,20 @@ st.subheader("Informasi Lainnya")
 plt.figure(figsize=(10, 5))
 daily_weather_df = create_daily_weather_df(filtered_df)
 
-plt.plot(daily_weather_df.index, daily_weather_df["TEMP"], marker='o', label='Suhu Udara', color='blue')
-plt.plot(daily_weather_df.index, daily_weather_df["DEWP"], marker='*', label='Kelembapan', color='green')
+plt.plot(
+    daily_weather_df.index,
+    daily_weather_df["TEMP"],
+    marker="o",
+    label="Suhu Udara",
+    color="blue",
+)
+plt.plot(
+    daily_weather_df.index,
+    daily_weather_df["DEWP"],
+    marker="*",
+    label="Kelembapan",
+    color="green",
+)
 plt.xlabel("Tanggal")
 plt.ylabel("Informasi lainnya")
 plt.title("Rata-rata")
@@ -145,25 +188,48 @@ st.pyplot(plt)
 st.subheader("Curah Hujan")
 
 plt.figure(figsize=(10, 5))
-plt.plot(daily_weather_df.index, daily_weather_df["RAIN"], marker='o', label='Curah Hujan', color='blue')
+plt.plot(
+    daily_weather_df.index,
+    daily_weather_df["RAIN"],
+    marker="o",
+    label="Curah Hujan",
+    color="blue",
+)
 plt.xlabel("Tanggal")
 plt.ylabel("Curah Hujan")
 plt.title("Curah Hujan per Hari")
 plt.legend()
 st.pyplot(plt)
 
-st.subheader(f"Rata-rata Polusi pada {end_date.date()}")
+requested_data = st.date_input(
+    label="Pilih Tanggal yang ingin dilihat",
+    value=None,
+    min_value=min_date.date(),
+    max_value=end_date.date(),
+)
 
-hourly_data = create_hourly_data_df(filtered_df)
+if requested_data is not None:
+    st.subheader(f"Rata-rata Polusi pada {requested_data}")
 
-plt.figure(figsize=(10, 5))
-plt.plot(hourly_data["Hour"], hourly_data["PM2.5"], marker='o', label='PM2.5', color='blue')
-plt.plot(hourly_data["Hour"], hourly_data["PM10"], marker='s', label='PM10', color='red')
+    hourly_data = create_hourly_data_df(requested_data, df)
 
-plt.xlabel("Jam")
-plt.ylabel("Rata-rata Polusi")
-plt.title(f"Rata-rata Polusi pada {end_date.date()}")
-plt.xticks(range(24))
-plt.legend()
+    plt.figure(figsize=(10, 5))
+    plt.plot(
+        hourly_data["Hour"],
+        hourly_data["PM2.5"],
+        marker="o",
+        label="PM2.5",
+        color="blue",
+    )
+    plt.plot(
+        hourly_data["Hour"], hourly_data["PM10"], marker="s", label="PM10", color="red"
+    )
 
-st.pyplot(plt)
+    plt.xlabel("Jam")
+    plt.ylabel("Rata-rata Polusi")
+    plt.title(f"Rata-rata Polusi pada {end_date.date()}")
+    plt.xticks(range(24))
+    plt.legend()
+
+    st.pyplot(plt)
+    st.write(hourly_data.groupby(by="Hour").agg({"PM2.5": "mean", "PM10": "mean"}))

@@ -8,7 +8,6 @@ st.set_page_config(
     #   layout="wide",
 )
 
-
 def get_station_location(df):
     return df["Station"].unique()[0]
 
@@ -49,6 +48,12 @@ def create_daily_weather_df(df):
     })
     return daily_weather_df
 
+def create_hourly_data_df(df):
+    last_day = pd.to_datetime(df["Date"]).dt
+
+    last_day_df = df[df["Year"] == last_day.year.max()][df["Month"] == last_day.month.max()][df["Day"] == last_day.day.max()]
+
+    return last_day_df
 
 df = pd.read_csv("dashboard/cleaned_data.csv")
 
@@ -69,8 +74,8 @@ with st.sidebar:
         value=[min_date.date(), max_date.date()]
     )
 
-    start_date = pd.to_datetime(start_date)
-    end_date = pd.to_datetime(end_date)
+    start_date = pd.to_datetime(start_date).replace(hour=23)
+    end_date = pd.to_datetime(end_date).replace(hour=23)
 
     filtered_df = df[(df["Date"] >= start_date) & (df["Date"] <= end_date)]
 
@@ -96,10 +101,10 @@ with st.container():
     col1, col2 = st.columns(2)
 
     with col1:
-        st.write(f"Mulai: {start_date.date()}")
+        st.write(f"Mulai: {start_date}")
 
     with col2:
-        st.write(f"Selesai: {end_date.date()}")
+        st.write(f"Selesai: {end_date}")
         
         
 plt.figure(figsize=(10, 5))
@@ -145,4 +150,20 @@ plt.xlabel("Tanggal")
 plt.ylabel("Curah Hujan")
 plt.title("Curah Hujan per Hari")
 plt.legend()
+st.pyplot(plt)
+
+st.subheader(f"Rata-rata Polusi pada {end_date.date()}")
+
+hourly_data = create_hourly_data_df(filtered_df)
+
+plt.figure(figsize=(10, 5))
+plt.plot(hourly_data["Hour"], hourly_data["PM2.5"], marker='o', label='PM2.5', color='blue')
+plt.plot(hourly_data["Hour"], hourly_data["PM10"], marker='s', label='PM10', color='red')
+
+plt.xlabel("Jam")
+plt.ylabel("Rata-rata Polusi")
+plt.title(f"Rata-rata Polusi pada {end_date.date()}")
+plt.xticks(range(24))
+plt.legend()
+
 st.pyplot(plt)
